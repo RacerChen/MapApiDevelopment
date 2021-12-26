@@ -49,16 +49,17 @@ def transform_df_wgs84_to_gcj02(wgs84_df_csv, gcj02_df_csv):
     bhr = BaiduHttpRequest()  # for util baidu api
 
     wgs84_df = pd.read_csv(wgs84_df_csv)
-    gcj02_df = wgs84_df
+    gcj02_df = pd.DataFrame(columns=['id', 'lon', 'lat'])
     for i in range(len(wgs84_df)):
         print(f'Progress: {i}/{len(wgs84_df)}...')
         wgs84_lon = wgs84_df.iloc[i]['lon']
         wgs84_lat = wgs84_df.iloc[i]['lat']
         gcj02_lon, gcj02_lat = bhr.coordsTransform(wgs84_lon, wgs84_lat, '1', '3')
-        gcj02_df.iloc[i]['lon'] = gcj02_lon
-        gcj02_df.iloc[i]['lat'] = gcj02_lat
+        gcj02_df = gcj02_df.append({'id': str(int(wgs84_df.iloc[i]['id'])), 'lon': gcj02_lon,
+                                    'lat': gcj02_lat}, ignore_index=True)
     print(wgs84_df)
     print(gcj02_df)
+    gcj02_df.to_csv(gcj02_df, index=False)
 
 
 if __name__ == '__main__':
