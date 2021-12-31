@@ -3,7 +3,8 @@ import requests
 from Keys import Baidu_AK
 import pandas as pd
 import numpy as np
-
+import os
+from datetime import datetime
 
 GS_coord_precision = 7
 
@@ -80,6 +81,12 @@ class BaiduHttpRequest:
             return evaluation_status, evaluation_status_desc, relates_roads
         else:
             return '', '', ''
+
+    def trafficInfoInRoad(self, road_name, city):
+        url = 'https://api.map.baidu.com/traffic/v1/road?road_name=%s&city=%s&ak=%s' % (road_name, city, self.AK)
+        json_content = self.requestUrlGetJson(url)
+        print(json_content)
+        return json_content
 
     def coord2placeInfo(self, lon, lat):
         """
@@ -182,6 +189,24 @@ def get_traffic_around(area_csv, search_radius):
     traffic_info_df.to_csv(area_csv.split('.')[0] + '_r' + search_radius + '.csv', index=False)
 
 
+# 获得五角场道路的实时交通路况情况
+def get_traffic_of_wujiaochang():
+    request_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    data_root = 'D:/研二上/交通分析与建模/wujiaochang_datas'
+    bhr = BaiduHttpRequest()  # for util baidu api
+    roads_list = ['邯郸路', '黄兴路', '四平路', '淞沪路', '翔殷路']
+    for road in roads_list:
+        cur_data_dir = data_root + '/' + road
+        if not os.path.isdir(cur_data_dir):
+            os.mkdir(cur_data_dir)
+        traffic_info = bhr.trafficInfoInRoad(road, '上海')
+        f = open(cur_data_dir + '/' + request_time.split(' ')[0] + '.txt', mode='a')
+        f.write(request_time)
+        f.write(' ')
+        f.write(str(traffic_info))
+        f.write('\n')
+
+
 if __name__ == '__main__':
     mbhr = BaiduHttpRequest()
     # lon, lat = hr.coordsTransform('121.3644257', '31.1040644', '1', '3')
@@ -196,4 +221,5 @@ if __name__ == '__main__':
 
     # get_all_local_info('shanghai_interpreter_highway_cross_gcj02.csv')
     # get_key_area_df('shanghai_interpreter_highway_cross_gcj02_info.csv', '安亭')
-    get_traffic_around('shanghai_interpreter_highway_cross_gcj02_info_五角场.csv', '100')
+    # get_traffic_around('shanghai_interpreter_highway_cross_gcj02_info_五角场.csv', '100')
+    mbhr.trafficInfoInRoad('翔殷路', '上海')
